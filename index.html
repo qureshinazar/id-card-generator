@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJKPA ID Card Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+        .container {
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+        #idCard {
+            margin-top: 20px;
+        }
+        #downloadBtn {
+            display: none;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #downloadBtn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>AJKPA ID Card Generator</h2>
+        <div class="form-group">
+            <label for="profilePic">Upload Profile Picture:</label>
+            <input type="file" id="profilePic" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+            <label for="designation">Designation:</label>
+            <input type="text" id="designation" required>
+        </div>
+        <div class="form-group">
+            <label for="district">District:</label>
+            <input type="text" id="district" required>
+        </div>
+        <div class="form-group">
+            <label for="tehsil">Tehsil:</label>
+            <input type="text" id="tehsil" required>
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+        </div>
+        <button class="btn" onclick="generateID()">Generate</button>
+        <div id="idCard"></div>
+        <button id="downloadBtn" onclick="downloadID()">Download ID Card</button>
+    </div>
+
+    <script>
+        let generatedCanvas;
+
+        function generateID() {
+            const name = document.getElementById('name').value;
+            const designation = document.getElementById('designation').value;
+            const district = document.getElementById('district').value;
+            const tehsil = document.getElementById('tehsil').value;
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+            const fileInput = document.getElementById('profilePic');
+            const file = fileInput.files[0];
+    
+            const canvas = document.createElement('canvas');
+            canvas.width = 590;
+            canvas.height = 1004;
+            const ctx = canvas.getContext('2d');
+    
+            const img = new Image();
+            img.src = 'id.png'; // Ensure id.png is available in the directory
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0);
+    
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const profilePic = new Image();
+                        profilePic.src = e.target.result;
+                        profilePic.onload = () => {
+                            const centerX = canvas.width / 2;
+                            const centerY = 300;
+                            const radius = 150;
+    
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                            ctx.closePath();
+                            ctx.clip();
+                            ctx.drawImage(profilePic, centerX - radius, centerY - radius, radius * 2, radius * 2);
+                            ctx.restore();
+    
+                            drawText();
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    drawText();
+                }
+            };
+    
+            function drawText() {
+                ctx.textAlign = 'center';
+                const x = canvas.width / 2;
+                let y = 500;
+
+                // Name in red, larger font
+                ctx.font = '45px Bookman Old Style'; 
+                ctx.fillStyle = 'red'; 
+                ctx.fillText(name, x, y);
+
+                ctx.font = '35px Arial'; 
+                ctx.fillStyle = 'black'; 
+                y += 60;
+                ctx.fillText(`Designation: ${designation}`, x, y);
+                y += 60;
+                ctx.fillText(`District: ${district}`, x, y);
+                y += 60;
+                ctx.fillText(`Tehsil: ${tehsil}`, x, y);
+                y += 60;
+                ctx.fillText(`Phone: ${phone}`, x, y);
+                y += 60;
+                ctx.fillText(`Email: ${email}`, x, y);
+    
+                const idCardDiv = document.getElementById('idCard');
+                idCardDiv.innerHTML = '';
+                const newImg = new Image();
+                newImg.src = canvas.toDataURL();
+                idCardDiv.appendChild(newImg);
+
+                // Store canvas for download
+                generatedCanvas = canvas;
+
+                // Show the download button
+                document.getElementById('downloadBtn').style.display = 'block';
+            }
+        }
+
+        function downloadID() {
+            if (generatedCanvas) {
+                const link = document.createElement('a');
+                link.href = generatedCanvas.toDataURL('image/jpeg');
+                link.download = 'ID_Card.jpg';
+                link.click();
+            }
+        }
+    </script>
+    
+</body>
+</html>
