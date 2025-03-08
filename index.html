@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AJKPA ID Card Generator</title>
+    <title>ID Card Generator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
+            align-items: flex-start;
+            min-height: 100vh;
             background-color: #f0f0f0;
-            flex-direction: column;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .container {
             text-align: center;
@@ -22,18 +24,15 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 600px;
+            overflow: auto;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .form-group input {
+        .button-container {
+            display: flex;
+            justify-content: center;
             width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
+            margin-top: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         .btn {
             padding: 10px 20px;
@@ -42,167 +41,442 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 14px;
         }
         .btn:hover {
             background-color: #218838;
         }
-        #idCard {
-            margin-top: 20px;
-        }
         #downloadBtn {
-            display: none;
-            margin-top: 15px;
-            padding: 10px 20px;
             background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
         }
         #downloadBtn:hover {
             background-color: #0056b3;
         }
-        .button-container {
-            display: flex;
-            justify-content: center;
+        #profilePic {
+            display: none;
+        }
+        .custom-file-upload {
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .custom-file-upload:hover {
+            background-color: #5a6268;
+        }
+        canvas {
+            border: 1px solid #000;
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+        .modal-content h3 {
+            margin-top: 0;
+        }
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .modal-content button.confirm {
+            background-color: #28a745;
+            color: white;
+        }
+        .modal-content button.confirm:hover {
+            background-color: #218838;
+        }
+        .modal-content button.cancel {
+            background-color: #dc3545;
+            color: white;
+        }
+        .modal-content button.cancel:hover {
+            background-color: #c82333;
+        }
+
+        /* Delete Field Modal Specific Styles */
+        .modal-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .modal-content table th,
+        .modal-content table td {
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        .modal-content table th {
+            background-color: #f0f0f0;
+        }
+        .modal-content table td {
+            text-align: left;
+        }
+        .delete-icon {
+            cursor: pointer;
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .delete-icon:hover {
+            color: #c82333;
+        }
+        .no-fields-message {
+            color: #6c757d;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>AJKPA ID Card Generator</h2>
-        <div class="form-group">
-            <label for="profilePic">Upload Profile Picture:</label>
-            <input type="file" id="profilePic" accept="image/*">
-        </div>
-        <div class="form-group">
-            <label for="name">Name:</label>
-            <input type="text" id="name" required>
-        </div>
-        <div class="form-group">
-            <label for="designation">Designation:</label>
-            <input type="text" id="designation" required>
-        </div>
-        <div class="form-group">
-            <label for="district">District:</label>
-            <input type="text" id="district" required>
-        </div>
-        <div class="form-group">
-            <label for="tehsil">Tehsil:</label>
-            <input type="text" id="tehsil" required>
-        </div>
-        <div class="form-group">
-            <label for="phone">Phone:</label>
-            <input type="text" id="phone" required>
-        </div>
-        <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" id="email" required>
-        </div>
-        <button class="btn" onclick="generateID()">Generate</button>
-        <div id="idCard"></div>
+        <h2>ID Card Generator</h2>
+        <canvas id="idCanvas" width="590" height="1004"></canvas>
         <div class="button-container">
-            <button id="downloadBtn" onclick="downloadID()">Download ID Card</button>
+            <label for="profilePic" class="custom-file-upload">
+                Choose File
+            </label>
+            <input type="file" id="profilePic" accept="image/*">
+            <button class="btn" onclick="showAddFieldModal()">Add Field</button>
+            <button class="btn" onclick="showAddOrganizationModal()">Add Organization</button>
+            <button class="btn" onclick="showDeleteFieldModal()">Delete Field</button>
+            <button class="btn" onclick="toggleBorder()">Toggle Border</button>
+            <button id="downloadBtn" class="btn" onclick="downloadID()">Download ID Card</button>
+        </div>
+    </div>
+
+    <!-- Modal for adding fields -->
+    <div id="addFieldModal" class="modal">
+        <div class="modal-content">
+            <h3>Add Field</h3>
+            <input type="text" id="fieldLabel" placeholder="Enter field label">
+            <input type="text" id="fieldValue" placeholder="Enter field value">
+            <button class="confirm" onclick="addField()">Add</button>
+            <button class="cancel" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Modal for adding organization -->
+    <div id="addOrganizationModal" class="modal">
+        <div class="modal-content">
+            <h3>Add Organization</h3>
+            <input type="text" id="orgName" placeholder="Enter organization name">
+            <input type="text" id="orgAddress" placeholder="Enter organization address">
+            <button class="confirm" onclick="addOrganization()">Add</button>
+            <button class="cancel" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Modal for deleting fields -->
+    <div id="deleteFieldModal" class="modal">
+        <div class="modal-content">
+            <h3>Delete Field</h3>
+            <div id="fieldsTableContainer">
+                <!-- Fields table will be dynamically inserted here -->
+            </div>
+            <button class="cancel" onclick="closeModal()">Close</button>
         </div>
     </div>
 
     <script>
-        let generatedCanvas;
+        const canvas = document.getElementById('idCanvas');
+        const ctx = canvas.getContext('2d');
+        let fields = [];
+        let organization = null; // Store organization details
+        let profilePic = null;
+        let isBorderEnabled = true; // Track border state
 
-        function generateID() {
-            const name = document.getElementById('name').value;
-            const designation = document.getElementById('designation').value;
-            const district = document.getElementById('district').value;
-            const tehsil = document.getElementById('tehsil').value;
-            const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
-            const fileInput = document.getElementById('profilePic');
-            const file = fileInput.files[0];
-    
-            const canvas = document.createElement('canvas');
-            canvas.width = 590;
-            canvas.height = 1004;
-            const ctx = canvas.getContext('2d');
-    
-            const img = new Image();
-            img.src = 'id.png'; // Ensure id.png is available in the directory
-            img.onload = () => {
-                ctx.drawImage(img, 0, 0);
-    
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        const profilePic = new Image();
-                        profilePic.src = e.target.result;
-                        profilePic.onload = () => {
-                            const centerX = canvas.width / 2;
-                            const centerY = 300;
-                            const radius = 150;
-    
-                            ctx.save();
-                            ctx.beginPath();
-                            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                            ctx.closePath();
-                            ctx.clip();
-                            ctx.drawImage(profilePic, centerX - radius, centerY - radius, radius * 2, radius * 2);
-                            ctx.restore();
-    
-                            drawText();
-                        };
+        // Load the background image
+        const img = new Image();
+        img.src = 'id.png'; // Ensure id.png is available in the directory
+        img.onload = () => {
+            drawCanvas();
+        };
+
+        // Handle profile picture upload
+        const profilePicInput = document.getElementById('profilePic');
+        profilePicInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    profilePic = new Image();
+                    profilePic.src = e.target.result;
+                    profilePic.onload = () => {
+                        drawCanvas();
                     };
-                    reader.readAsDataURL(file);
-                } else {
-                    drawText();
-                }
-            };
-    
-            function drawText() {
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Function to draw the entire canvas
+        function drawCanvas() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the background image
+            ctx.drawImage(img, 0, 0);
+
+            // Draw the profile picture (if uploaded)
+            if (profilePic) {
+                const centerX = canvas.width / 2;
+                const centerY = 300;
+                const radius = 150;
+
+                // Clip the profile picture into a circle
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+                ctx.drawImage(profilePic, centerX - radius, centerY - radius, radius * 2, radius * 2);
+                ctx.restore();
+            }
+
+            // Draw organization details
+            drawOrganization();
+
+            // Draw the table for fields
+            drawTable();
+        }
+
+        // Function to draw organization details
+        function drawOrganization() {
+            if (organization) {
+                const centerX = canvas.width / 2;
+                const orgY = 100; // Y position for organization details
+                const fontSize = 24;
+
+                // Split the organization value into name and address
+                const [orgName, orgAddress] = organization.value.split(',');
+
+                // Set font and color
+                ctx.font = `${fontSize}px Arial`;
+                ctx.fillStyle = '#ffffff'; // White color
                 ctx.textAlign = 'center';
-                const x = canvas.width / 2;
-                let y = 500;
 
-                // Name in red, larger font
-                ctx.font = '45px Bookman Old Style'; 
-                ctx.fillStyle = 'red'; 
-                ctx.fillText(name, x, y);
+                // Draw organization name in uppercase
+                ctx.fillText(orgName.toUpperCase(), centerX, orgY);
 
-                ctx.font = '35px Arial'; 
-                ctx.fillStyle = 'black'; 
-                y += 60;
-                ctx.fillText(`Designation: ${designation}`, x, y);
-                y += 60;
-                ctx.fillText(`District: ${district}`, x, y);
-                y += 60;
-                ctx.fillText(`Tehsil: ${tehsil}`, x, y);
-                y += 60;
-                ctx.fillText(`Phone: ${phone}`, x, y);
-                y += 60;
-                ctx.fillText(`Email: ${email}`, x, y);
-    
-                const idCardDiv = document.getElementById('idCard');
-                idCardDiv.innerHTML = '';
-                const newImg = new Image();
-                newImg.src = canvas.toDataURL();
-                idCardDiv.appendChild(newImg);
-
-                // Store canvas for download
-                generatedCanvas = canvas;
-
-                // Show the download button
-                document.getElementById('downloadBtn').style.display = 'block';
+                // Draw organization address
+                ctx.fillText(orgAddress.trim(), centerX, orgY + fontSize + 10); // Add spacing for the new line
             }
         }
 
+        // Function to draw the table
+        function drawTable() {
+            const tableX = 50; // X position of the table
+            const tableY = 500; // Y position of the table
+            const rowHeight = 50; // Height of each row
+            const col1Width = 150; // Width of the first column (for labels)
+            const col2Width = 350; // Width of the second column (for values)
+            const fontSize = 20; // Font size for text
+            const padding = 10; // Padding for text inside cells
+            const rowSpacing = 15; // Additional space between rows
+
+            // Draw table borders (only if border is enabled)
+            if (isBorderEnabled) {
+                ctx.strokeStyle = '#007bff'; // Blue color
+                ctx.lineWidth = 1; // Thin line
+                ctx.setLineDash([5, 5]); // Dashed line pattern
+                ctx.strokeRect(tableX, tableY, col1Width + col2Width, (rowHeight + rowSpacing) * fields.length - rowSpacing);
+
+                // Draw vertical line between columns
+                ctx.beginPath();
+                ctx.moveTo(tableX + col1Width, tableY);
+                ctx.lineTo(tableX + col1Width, tableY + (rowHeight + rowSpacing) * fields.length - rowSpacing);
+                ctx.stroke();
+
+                // Draw horizontal lines for rows
+                for (let i = 1; i < fields.length; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(tableX, tableY + (rowHeight + rowSpacing) * i);
+                    ctx.lineTo(tableX + col1Width + col2Width, tableY + (rowHeight + rowSpacing) * i);
+                    ctx.stroke();
+                }
+
+                // Reset line dash for other drawings
+                ctx.setLineDash([]);
+            }
+
+            // Draw field labels and values in the table
+            ctx.font = `${fontSize}px Arial`;
+            ctx.fillStyle = '#000';
+            ctx.textAlign = 'left';
+
+            fields.forEach((field, index) => {
+                const rowY = tableY + (rowHeight + rowSpacing) * index + rowHeight / 2 + fontSize / 2;
+
+                // Draw label in the first column
+                ctx.fillText(field.label + ':', tableX + padding, rowY);
+
+                // Draw value in the second column
+                ctx.fillText(field.value, tableX + col1Width + padding, rowY);
+            });
+        }
+
+        // Function to toggle the border
+        function toggleBorder() {
+            isBorderEnabled = !isBorderEnabled; // Toggle the state
+            drawCanvas(); // Redraw the canvas
+        }
+
+        // Function to show the add field modal
+        function showAddFieldModal() {
+            const modal = document.getElementById('addFieldModal');
+            modal.style.display = 'flex';
+        }
+
+        // Function to show the add organization modal
+        function showAddOrganizationModal() {
+            const modal = document.getElementById('addOrganizationModal');
+            modal.style.display = 'flex';
+        }
+
+        // Function to add organization details
+        function addOrganization() {
+            const orgName = document.getElementById('orgName').value;
+            const orgAddress = document.getElementById('orgAddress').value;
+
+            if (orgName && orgAddress) {
+                organization = { label: 'Organization', value: `${orgName}, ${orgAddress}` };
+                drawCanvas();
+                closeModal();
+
+                // Clear the input fields
+                document.getElementById('orgName').value = '';
+                document.getElementById('orgAddress').value = '';
+            } else {
+                alert('Please enter both organization name and address.');
+            }
+        }
+
+        // Function to show the delete field modal
+        function showDeleteFieldModal() {
+            const modal = document.getElementById('deleteFieldModal');
+            const fieldsTableContainer = document.getElementById('fieldsTableContainer');
+
+            // Clear the container
+            fieldsTableContainer.innerHTML = '';
+
+            if (fields.length === 0 && !organization) {
+                // Show message if no fields or organization exist
+                fieldsTableContainer.innerHTML = '<p class="no-fields-message">No fields or organization to delete.</p>';
+            } else {
+                // Create a table to display fields and organization
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Label</th>
+                            <th>Value</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${organization ? `
+                            <tr>
+                                <td>Organization</td>
+                                <td>${organization.value}</td>
+                                <td>
+                                    <span class="delete-icon" onclick="deleteField('organization')">❌</span>
+                                </td>
+                            </tr>
+                        ` : ''}
+                        ${fields.map((field, index) => `
+                            <tr>
+                                <td>${field.label}</td>
+                                <td>${field.value}</td>
+                                <td>
+                                    <span class="delete-icon" onclick="deleteField(${index})">❌</span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                fieldsTableContainer.appendChild(table);
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        // Function to close the modal
+        function closeModal() {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => modal.style.display = 'none');
+        }
+
+        // Function to add a new field
+        function addField() {
+            const fieldLabel = document.getElementById('fieldLabel').value;
+            const fieldValue = document.getElementById('fieldValue').value;
+
+            if (fieldLabel && fieldValue) {
+                fields.push({ label: fieldLabel, value: fieldValue });
+                drawCanvas();
+                closeModal();
+
+                // Clear the input fields
+                document.getElementById('fieldLabel').value = '';
+                document.getElementById('fieldValue').value = '';
+            } else {
+                alert('Please enter both field label and value.');
+            }
+        }
+
+        // Function to delete a field or organization
+        function deleteField(index) {
+            if (index === 'organization') {
+                organization = null; // Delete organization details
+            } else {
+                fields.splice(index, 1); // Delete regular fields
+            }
+            drawCanvas();
+            showDeleteFieldModal(); // Refresh the delete modal
+        }
+
+        // Function to download the ID card as an image
         function downloadID() {
-            if (generatedCanvas) {
-                const link = document.createElement('a');
-                link.href = generatedCanvas.toDataURL('image/jpeg');
-                link.download = 'ID_Card.jpg';
-                link.click();
-            }
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/jpeg');
+            link.download = 'ID_Card.jpg';
+            link.click();
         }
+
+        // Initial draw of the canvas
+        drawCanvas();
     </script>
-    
 </body>
 </html>
