@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ID Card Generator</title>
     <style>
+        /* Basic body styling */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -16,6 +17,8 @@
             padding: 20px;
             box-sizing: border-box;
         }
+
+        /* Container for the ID card generator */
         .container {
             text-align: center;
             background: #fff;
@@ -26,6 +29,8 @@
             max-width: 600px;
             overflow: auto;
         }
+
+        /* Button container styling */
         .button-container {
             display: flex;
             justify-content: center;
@@ -34,6 +39,8 @@
             gap: 10px;
             flex-wrap: wrap;
         }
+
+        /* General button styling */
         .btn {
             padding: 10px 20px;
             background-color: #28a745;
@@ -43,18 +50,28 @@
             cursor: pointer;
             font-size: 14px;
         }
+
+        /* Button hover effect */
         .btn:hover {
             background-color: #218838;
         }
+
+        /* Download button specific styling */
         #downloadBtn {
             background-color: #007bff;
         }
+
+        /* Download button hover effect */
         #downloadBtn:hover {
             background-color: #0056b3;
         }
+
+        /* Hide the file input */
         #profilePic {
             display: none;
         }
+
+        /* Custom file upload button styling */
         .custom-file-upload {
             padding: 10px 20px;
             background-color: #6c757d;
@@ -64,9 +81,13 @@
             cursor: pointer;
             font-size: 14px;
         }
+
+        /* Custom file upload button hover effect */
         .custom-file-upload:hover {
             background-color: #5a6268;
         }
+
+        /* Canvas styling */
         canvas {
             border: 1px solid #000;
             margin-top: 20px;
@@ -74,7 +95,7 @@
             height: auto;
         }
 
-        /* Modal styles */
+        /* Modal styling */
         .modal {
             display: none;
             position: fixed;
@@ -86,6 +107,8 @@
             justify-content: center;
             align-items: center;
         }
+
+        /* Modal content styling */
         .modal-content {
             background-color: white;
             padding: 20px;
@@ -94,9 +117,13 @@
             width: 400px;
             text-align: center;
         }
+
+        /* Modal heading styling */
         .modal-content h3 {
             margin-top: 0;
         }
+
+        /* Modal input styling */
         .modal-content input {
             width: 100%;
             padding: 10px;
@@ -105,6 +132,8 @@
             border-radius: 5px;
             font-size: 14px;
         }
+
+        /* Modal button styling */
         .modal-content button {
             padding: 10px 20px;
             margin: 5px;
@@ -113,17 +142,25 @@
             cursor: pointer;
             font-size: 14px;
         }
+
+        /* Confirm button styling */
         .modal-content button.confirm {
             background-color: #28a745;
             color: white;
         }
+
+        /* Confirm button hover effect */
         .modal-content button.confirm:hover {
             background-color: #218838;
         }
+
+        /* Cancel button styling */
         .modal-content button.cancel {
             background-color: #dc3545;
             color: white;
         }
+
+        /* Cancel button hover effect */
         .modal-content button.cancel:hover {
             background-color: #c82333;
         }
@@ -134,25 +171,37 @@
             border-collapse: collapse;
             margin-top: 10px;
         }
+
+        /* Table header and cell styling */
         .modal-content table th,
         .modal-content table td {
             padding: 10px;
             border: 1px solid #ccc;
         }
+
+        /* Table header background */
         .modal-content table th {
             background-color: #f0f0f0;
         }
+
+        /* Table cell text alignment */
         .modal-content table td {
             text-align: left;
         }
+
+        /* Delete icon styling */
         .delete-icon {
             cursor: pointer;
             color: #dc3545;
             font-weight: bold;
         }
+
+        /* Delete icon hover effect */
         .delete-icon:hover {
             color: #c82333;
         }
+
+        /* Message when no fields exist */
         .no-fields-message {
             color: #6c757d;
             font-style: italic;
@@ -160,19 +209,27 @@
     </style>
 </head>
 <body>
+    <!-- Main container for the ID card generator -->
     <div class="container">
         <h2>ID Card Generator</h2>
+        <!-- Canvas for drawing the ID card -->
         <canvas id="idCanvas" width="590" height="1004"></canvas>
+        <!-- Button container for actions -->
         <div class="button-container">
+            <!-- File upload button -->
             <label for="profilePic" class="custom-file-upload">
                 Choose File
             </label>
             <input type="file" id="profilePic" accept="image/*">
+            <!-- Buttons for adding fields, organization, deleting fields, toggling border, and downloading -->
             <button class="btn" onclick="showAddFieldModal()">Add Field</button>
             <button class="btn" onclick="showAddOrganizationModal()">Add Organization</button>
             <button class="btn" onclick="showDeleteFieldModal()">Delete Field</button>
             <button class="btn" onclick="toggleBorder()">Toggle Border</button>
             <button id="downloadBtn" class="btn" onclick="downloadID()">Download ID Card</button>
+            <!-- Buttons for changing top and bottom region colors -->
+            <button class="btn" id="colorButtonTop">Change Top Region Color</button>
+            <button class="btn" id="colorButtonBottom">Change Bottom Region Color</button>
         </div>
     </div>
 
@@ -210,59 +267,160 @@
     </div>
 
     <script>
+        // Get the canvas and its 2D context
         const canvas = document.getElementById('idCanvas');
         const ctx = canvas.getContext('2d');
-        let fields = [];
-        let organization = null; // Store organization details
-        let profilePic = null;
-        let isBorderEnabled = true; // Track border state
 
-        // Load the background image
-        const img = new Image();
-        img.src = 'id.png'; // Ensure id.png is available in the directory
-        img.onload = () => {
-            drawCanvas();
+        // Variables for Script A (Animated Waves)
+        const colors = {
+            line: 'yellow', // Color of the wavy line
+            circle: 'yellow', // Color of the circle
+            topRegion: 'lightblue', // Color of the top region
+            bottomRegion: 'white' // Color of the bottom region
         };
+
+        // Variables for the wavy line animation
+        const line = {
+            startY: 300, // Starting Y position of the line
+            amplitude: 10, // Decreased amplitude for smaller wave height
+            frequency: 0.02, // Frequency of the wave
+            thickness: 5, // Decreased thickness for thinner line
+            phase: 0 // Phase of the wave for animation
+        };
+
+        // Variables for the circle
+        const circle = {
+            centerX: canvas.width / 2, // X position of the circle center
+            centerY: 300, // Y position of the circle center
+            radius: 150 // Radius of the circle
+        };
+
+        // Variables for Script B (ID Card Generator)
+        let fields = []; // Array to store fields
+        let organization = null; // Object to store organization details
+        let profilePic = null; // Variable to store the profile picture
+        let isBorderEnabled = true; // Boolean to track border state
+
+        // Function to generate a random gradient for the top region
+        function getRandomGradientTop() {
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0); // Create a linear gradient
+            const randomColors = Array(3).fill(0).map(() =>
+                `hsl(${Math.random() * 360}, 80%, 70%)` // Generate random HSL colors
+            );
+            randomColors.forEach((color, index) =>
+                gradient.addColorStop(index / (randomColors.length - 1), color) // Add color stops to the gradient
+            );
+            return gradient; // Return the gradient
+        }
+
+        // Function to generate a white-themed gradient for the bottom region
+        function getRandomGradientBottom() {
+            const gradient = ctx.createLinearGradient(0, canvas.height, canvas.width, 0); // Create a linear gradient
+            const colorPalette = ['white', 'lightgray', 'gainsboro', 'ghostwhite', 'linen']; // White-themed colors
+            const randomColors = Array(3).fill(0).map(() =>
+                colorPalette[Math.floor(Math.random() * colorPalette.length)] // Pick random colors from the palette
+            );
+            randomColors.forEach((color, index) =>
+                gradient.addColorStop(index / (randomColors.length - 1), color) // Add color stops to the gradient
+            );
+            return gradient; // Return the gradient
+        }
+
+        // Function to draw the animated wavy line
+        function drawWavyLine() {
+            ctx.beginPath(); // Start drawing the path
+            for (let x = 0; x <= canvas.width; x++) {
+                const y = line.startY + Math.sin(x * line.frequency + line.phase) * line.amplitude; // Calculate Y position
+                ctx.lineTo(x, y); // Draw the line
+            }
+            ctx.strokeStyle = colors.line; // Set the line color
+            ctx.lineWidth = line.thickness; // Set the line thickness
+            ctx.stroke(); // Stroke the path
+        }
+
+        // Function to fill the top region
+        function fillTopRegion() {
+            ctx.save(); // Save the current canvas state
+            ctx.beginPath(); // Start drawing the path
+            ctx.moveTo(0, 0); // Move to the top-left corner
+            for (let x = 0; x <= canvas.width; x++) {
+                const y = line.startY + Math.sin(x * line.frequency + line.phase) * line.amplitude; // Calculate Y position
+                ctx.lineTo(x, y); // Draw the line
+            }
+            ctx.lineTo(canvas.width, 0); // Draw to the top-right corner
+            ctx.closePath(); // Close the path
+            ctx.clip(); // Clip the canvas to the path
+            ctx.fillStyle = colors.topRegion; // Set the fill color
+            ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the region
+            ctx.restore(); // Restore the canvas state
+        }
+
+        // Function to fill the bottom region
+        function fillBottomRegion() {
+            ctx.save(); // Save the current canvas state
+            ctx.beginPath(); // Start drawing the path
+            ctx.moveTo(0, canvas.height); // Move to the bottom-left corner
+            for (let x = 0; x <= canvas.width; x++) {
+                const y = line.startY + Math.sin(x * line.frequency + line.phase) * line.amplitude; // Calculate Y position
+                ctx.lineTo(x, y); // Draw the line
+            }
+            ctx.lineTo(canvas.width, canvas.height); // Draw to the bottom-right corner
+            ctx.closePath(); // Close the path
+            ctx.clip(); // Clip the canvas to the path
+            ctx.fillStyle = colors.bottomRegion; // Set the fill color
+            ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the region
+            ctx.restore(); // Restore the canvas state
+        }
+
+        // Function to draw the yellow circle
+        function drawCircle() {
+            ctx.beginPath(); // Start drawing the path
+            ctx.arc(circle.centerX, circle.centerY, circle.radius, 0, Math.PI * 2); // Draw the circle
+            ctx.fillStyle = colors.circle; // Set the fill color
+            ctx.fill(); // Fill the circle
+        }
 
         // Handle profile picture upload
         const profilePicInput = document.getElementById('profilePic');
         profilePicInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
+            const file = event.target.files[0]; // Get the uploaded file
             if (file) {
-                const reader = new FileReader();
+                const reader = new FileReader(); // Create a FileReader
                 reader.onload = (e) => {
-                    profilePic = new Image();
-                    profilePic.src = e.target.result;
+                    profilePic = new Image(); // Create a new image
+                    profilePic.src = e.target.result; // Set the image source
                     profilePic.onload = () => {
-                        drawCanvas();
+                        drawCanvas(); // Redraw the canvas when the image loads
                     };
                 };
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(file); // Read the file as a data URL
             }
         });
 
         // Function to draw the entire canvas
         function drawCanvas() {
-            // Clear the canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
 
-            // Draw the background image
-            ctx.drawImage(img, 0, 0);
+            // Draw the animated waves and dynamic colors
+            fillTopRegion(); // Fill the top region
+            fillBottomRegion(); // Fill the bottom region
+            drawWavyLine(); // Draw the wavy line
+            drawCircle(); // Draw the circle
 
             // Draw the profile picture (if uploaded)
             if (profilePic) {
-                const centerX = canvas.width / 2;
-                const centerY = 300;
-                const radius = 150;
+                const centerX = canvas.width / 2; // Center X position
+                const centerY = 300; // Center Y position
+                const radius = 150; // Radius of the circle
 
                 // Clip the profile picture into a circle
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                ctx.closePath();
-                ctx.clip();
-                ctx.drawImage(profilePic, centerX - radius, centerY - radius, radius * 2, radius * 2);
-                ctx.restore();
+                ctx.save(); // Save the current canvas state
+                ctx.beginPath(); // Start drawing the path
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2); // Draw the circle
+                ctx.closePath(); // Close the path
+                ctx.clip(); // Clip the canvas to the circle
+                ctx.drawImage(profilePic, centerX - radius, centerY - radius, radius * 2, radius * 2); // Draw the image
+                ctx.restore(); // Restore the canvas state
             }
 
             // Draw organization details
@@ -275,17 +433,17 @@
         // Function to draw organization details
         function drawOrganization() {
             if (organization) {
-                const centerX = canvas.width / 2;
+                const centerX = canvas.width / 2; // Center X position
                 const orgY = 100; // Y position for organization details
-                const fontSize = 24;
+                const fontSize = 24; // Font size
 
                 // Split the organization value into name and address
                 const [orgName, orgAddress] = organization.value.split(',');
 
                 // Set font and color
-                ctx.font = `${fontSize}px Arial`;
-                ctx.fillStyle = '#ffffff'; // White color
-                ctx.textAlign = 'center';
+                ctx.font = `${fontSize}px Arial`; // Set the font
+                ctx.fillStyle = 'red'; // Set the text color to red
+                ctx.textAlign = 'center'; // Center align the text
 
                 // Draw organization name in uppercase
                 ctx.fillText(orgName.toUpperCase(), centerX, orgY);
@@ -332,9 +490,9 @@
             }
 
             // Draw field labels and values in the table
-            ctx.font = `${fontSize}px Arial`;
-            ctx.fillStyle = '#000';
-            ctx.textAlign = 'left';
+            ctx.font = `${fontSize}px Arial`; // Set the font
+            ctx.fillStyle = '#000'; // Set the text color
+            ctx.textAlign = 'left'; // Left align the text
 
             fields.forEach((field, index) => {
                 const rowY = tableY + (rowHeight + rowSpacing) * index + rowHeight / 2 + fontSize / 2;
@@ -356,30 +514,30 @@
         // Function to show the add field modal
         function showAddFieldModal() {
             const modal = document.getElementById('addFieldModal');
-            modal.style.display = 'flex';
+            modal.style.display = 'flex'; // Show the modal
         }
 
         // Function to show the add organization modal
         function showAddOrganizationModal() {
             const modal = document.getElementById('addOrganizationModal');
-            modal.style.display = 'flex';
+            modal.style.display = 'flex'; // Show the modal
         }
 
         // Function to add organization details
         function addOrganization() {
-            const orgName = document.getElementById('orgName').value;
-            const orgAddress = document.getElementById('orgAddress').value;
+            const orgName = document.getElementById('orgName').value; // Get organization name
+            const orgAddress = document.getElementById('orgAddress').value; // Get organization address
 
             if (orgName && orgAddress) {
-                organization = { label: 'Organization', value: `${orgName}, ${orgAddress}` };
-                drawCanvas();
-                closeModal();
+                organization = { label: 'Organization', value: `${orgName}, ${orgAddress}` }; // Store organization details
+                drawCanvas(); // Redraw the canvas
+                closeModal(); // Close the modal
 
                 // Clear the input fields
                 document.getElementById('orgName').value = '';
                 document.getElementById('orgAddress').value = '';
             } else {
-                alert('Please enter both organization name and address.');
+                alert('Please enter both organization name and address.'); // Show alert if fields are empty
             }
         }
 
@@ -426,33 +584,33 @@
                         `).join('')}
                     </tbody>
                 `;
-                fieldsTableContainer.appendChild(table);
+                fieldsTableContainer.appendChild(table); // Add the table to the container
             }
 
-            modal.style.display = 'flex';
+            modal.style.display = 'flex'; // Show the modal
         }
 
         // Function to close the modal
         function closeModal() {
             const modals = document.querySelectorAll('.modal');
-            modals.forEach(modal => modal.style.display = 'none');
+            modals.forEach(modal => modal.style.display = 'none'); // Hide all modals
         }
 
         // Function to add a new field
         function addField() {
-            const fieldLabel = document.getElementById('fieldLabel').value;
-            const fieldValue = document.getElementById('fieldValue').value;
+            const fieldLabel = document.getElementById('fieldLabel').value; // Get field label
+            const fieldValue = document.getElementById('fieldValue').value; // Get field value
 
             if (fieldLabel && fieldValue) {
-                fields.push({ label: fieldLabel, value: fieldValue });
-                drawCanvas();
-                closeModal();
+                fields.push({ label: fieldLabel, value: fieldValue }); // Add the field to the array
+                drawCanvas(); // Redraw the canvas
+                closeModal(); // Close the modal
 
                 // Clear the input fields
                 document.getElementById('fieldLabel').value = '';
                 document.getElementById('fieldValue').value = '';
             } else {
-                alert('Please enter both field label and value.');
+                alert('Please enter both field label and value.'); // Show alert if fields are empty
             }
         }
 
@@ -463,20 +621,39 @@
             } else {
                 fields.splice(index, 1); // Delete regular fields
             }
-            drawCanvas();
+            drawCanvas(); // Redraw the canvas
             showDeleteFieldModal(); // Refresh the delete modal
         }
 
         // Function to download the ID card as an image
         function downloadID() {
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/jpeg');
-            link.download = 'ID_Card.jpg';
-            link.click();
+            const link = document.createElement('a'); // Create a link element
+            link.href = canvas.toDataURL('image/jpeg'); // Set the href to the canvas data URL
+            link.download = 'ID_Card.jpg'; // Set the download filename
+            link.click(); // Trigger the download
+        }
+
+        // Add event listeners for color change buttons
+        document.getElementById('colorButtonTop').addEventListener('click', () => {
+            colors.topRegion = getRandomGradientTop(); // Change top region color
+            drawCanvas(); // Redraw the canvas
+        });
+
+        document.getElementById('colorButtonBottom').addEventListener('click', () => {
+            colors.bottomRegion = getRandomGradientBottom(); // Change bottom region color
+            drawCanvas(); // Redraw the canvas
+        });
+
+        // Animate the wavy line
+        function animate() {
+            line.phase += 0.05; // Update the phase for animation
+            drawCanvas(); // Redraw the canvas
+            requestAnimationFrame(animate); // Request the next animation frame
         }
 
         // Initial draw of the canvas
         drawCanvas();
+        animate(); // Start the animation
     </script>
 </body>
 </html>
